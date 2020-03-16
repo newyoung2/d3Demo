@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0,minimal-ui:ios">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="../d3.js"></script>
+    <style>
+    .box{
+        width: 500px;
+        
+        background: red;
+    }
+    
+    </style>
+</head>
+
+<body>
+    
+    <script>
+        d3.select('body').append('div').classed("box",true).style("background",'red').style("height","500px").transition().duration(5000)
+            .style("width",'100px')
+            .style("background",'green')
+            .style('margin-left','600px')
+    </script>
+</body>
+
+
+
+
+</html>
+

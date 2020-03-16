@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0,minimal-ui:ios">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="../d3.js"></script>
+    <style>
+    .container{
+        width: 80%;
+        border: 1px solid black;
+        height: 50vh;
+        margin: 5vh auto;
+        display: flex;
+    }
+
+    .barstyle{
+        width: 20px;
+        color: white;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: end;
+        padding-bottom: 15px;
+        margin: 5px;
+        text-align: center;
+    }
+    
+    </style>
+</head>
+
+<body>
+    <span>复合对象插值</span>
+    <div class="container" id="root">
+        
+    </div>
+    <script>
+         let max= 40
+         let data = []
+         let scalePow = d3.scalePow().exponent(2).domain([0,max]).range([{color:'#add8e6',height:'15px'},{color:'#4169e1',height:'350px'}])
+         for(let i =0;i<=max;i++){
+              data.push(i)
+         }
+
+        function render(data,scale,selector){
+            let bars = d3.select(selector).selectAll("div.barstyle").data(data)
+            bars.enter().append("barstyle").attr("class","barstyle").merge(bars)
+            .style("height",function(d,i){
+                    return scale(i).height
+            })
+            .style("background",function(d,i){
+                    return scale(i).color
+            })
+            .text(function(d,i){
+                return i
+            })
+
+            bars.exit().remove()
+        } 
+
+        render(data,scalePow,"#root")
+    </script>
+</body>
+
+
+
+
+</html>
+

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0,minimal-ui:ios">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="../d3.js"></script>
+    <style>
+    .container{
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+    }
+
+    /* .axis{
+        border:1px solid black;
+    } */
+
+    .module{
+        box-sizing: border-box;
+        width: 45%;
+        height: 80vh;
+        border: 1px solid black;
+
+    }
+    
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="module">
+            <div  id="root"></div>
+            <span onclick="renderAll(d3.axisBottom)"> bottom</span>
+            <span onclick="renderAll(d3.axisTop)"> top</span>
+            <span onclick="renderAll(d3.axisLeft)"> left</span>
+            <span onclick="renderAll(d3.axisRight)"> right</span>
+        </div>
+
+        <div class="module">
+            <div  id="root2"></div>
+        </div>
+       
+    </div>
+    
+    <script>
+        let height = 500,width=500,margin=25,offset=50,axisWidth=width-2*margin,svg
+
+        function createSvg(){
+            svg = d3.select("#root").append("svg").style("height",height).style("width",width)
+        }
+
+        function renderAxis(fn,scale,i){
+            let axis = fn().scale(scale).ticks(5)
+            console.log([d3.axisTop,d3.axisBottom].includes(fn))
+            svg.append('g').attr("transform",function(){
+                if([d3.axisTop,d3.axisBottom].includes(fn)){
+                    console.log("1111111")
+                      return "translate("+margin+","+offset*i+")"
+                }else{
+                    return "translate("+offset*i+","+margin+")"
+                }
+            }).call(axis)
+        }
+
+        function renderAll(fn){
+            if(svg) svg.remove()
+            console.log(fn)
+            
+            createSvg()
+            renderAxis(fn,d3.scaleLinear().domain([0,1000]).range([0,axisWidth]),1)
+            renderAxis(fn,d3.scalePow().exponent(2).domain([0,1000]).range([0,axisWidth]),2)
+            renderAxis(fn,d3.scaleTime().domain([new Date(2016,0,1),new Date(2017,0,1)]).range([0,axisWidth]),3)
+        }
+
+        // -----------------------------------end1-------------------------------------------------
+        
+        let height2 = 500,width2=500,margin2=25,offset2=50,axisWidth2=width2-2*margin2,svg2
+
+        svg2=d3.select("#root2").append("svg").style("width",width2).style("height",height2)
+
+        scale2 = d3.scaleLinear().domain([0,1]).range([0,axisWidth2])
+
+        axis2 = d3.axisBottom().scale(scale2).ticks(10).tickSize(12).tickPadding(10).tickFormat(d3.format(".0%"))
+        console.log(axis2)
+        svg2.append("g").attr("transform",function(){
+            console.log("159")
+            return "translate("+margin2+","+offset2+")"
+        }).call(axis2)
+        
+        // -----------------------------------end2---------------------------------------------------------
+
+    </script>
+</body>
+
+
+
+
+</html>
+
