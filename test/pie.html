@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0,minimal-ui:ios">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="../d3.js"></script>
+    <style>
+    .container{
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* .axis{
+        border:1px solid black;
+    } */
+
+    .svg_style{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 80vh;
+        -moz-box-shadow:0px 0px 20px #333333;
+        -webkit-box-shadow:0px 0px 20px #333333;
+        box-shadow:0px 0px 20px #333333;
+    }    
+
+    .toolTip{
+        position: absolute;
+        width: 130px;
+        height: 77px;
+        background-color: rgba(0,0,0,0.5);
+        border-radius: 15px;
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .toolTipText{
+        font-size: 12px;
+        letter-spacing: 1px;
+         margin: 2px 0;
+    }
+
+    .pieTip{
+        transform: scale(1.2);
+    }
+
+    .pieG{}
+    </style>
+</head>
+
+<body>
+    <!-- 折线图 -->
+    <div class="container" id="root">
+          
+    </div>
+    
+    <script>
+        let width = "1000";
+        let hight = "700";
+        let outerRadius = 200;                            //饼图半径，后面也用做图像相对于原点的偏移量
+        let innerRadius = 80;     //颜色列表
+        let data = ["30","40",'50','60','70'];
+        let colorScale = d3.scaleOrdinal().domain([0, data.length]).range(d3.schemeCategory10)
+        let svg = d3.select("#root").append("svg")              //创建svg
+                .attr("width", width+'px')  //长
+                .attr("height", hight+'px') //高
+                .attr('class','svg_style')
+                .append("g")                //make a group to hold our pie chart
+                .attr("transform", "translate(350,250)"); 
+
+        let arc = d3.arc().outerRadius(outerRadius).innerRadius(innerRadius);
+        let pie = d3.pie();    
+        let pieData = pie(data)
+        
+        let g = svg.selectAll('g.pieG').data(pieData).enter()
+                .append('g')
+                .attr('class','pieG')
+                // .attr("transform", "translate(" + outerRadius + "," + outerRadius + ")")
+                
+                g.append("path")
+                .attr("d", d => arc(d))
+                .attr("fill", (d, i) => colorScale(i))
+                .on('mouseover',function(d,i) {
+                     //鼠标移入原点事件
+                     const e = event || window.event;
+                              const obj = {
+                                  type:'show',
+                                  x:e.clientX,
+                                  y:e.clientY,
+                                  data:d
+                              }
+                              showToopTop(obj)  //显示提示框
+                    d3.selectAll('g.pieG').filter(`:nth-child(${i+1})`).attr("transform", `scale(1.1) translate(${arc.centroid(d)[0]*0.1},${arc.centroid(d)[1]*0.1})`); 
+                })
+                .on('mouseout',function(d,i){      
+                     showToopTop({type:false})  //隐藏提示框
+                    //   d3.select(this).attr('transform',`translate(${arc.centroid(d)[0]},${arc.centroid(d)[1]})`)
+                    d3.selectAll('g.pieG').filter(`:nth-child(${i+1})`).attr("transform", `scale(1)`); 
+                })
+
+                //饼图添加文字
+                g.append("text")
+                .attr("transform", d => {
+                    return "translate(" + arc.centroid(d) + ")";
+                })
+                .attr("text-anchor", "middle")
+                .append('tspan')
+                .attr('fill','#ffffff')
+                .text(d => d.value)
+                
+                const showToopTop = (obj) => {
+                        if (obj.type == 'show') {
+                            d3.select("#root").append('div')
+                                .attr("class", 'toolTip')
+                                .style('left', obj.x + 20 + 'px')
+                                .style('top', obj.y + 20 + 'px')
+                                .append('div').attr('class', 'toolTipText').text(obj.data.data)
+                        } else {
+                            d3.select('div.toolTip').remove()
+                        }
+
+                    }
+    </script>
+</body>
+
+
+
+
+</html>
+

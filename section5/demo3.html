@@ -33,6 +33,7 @@
          stroke-opacity: .2;
         }
     
+    
     </style>
 </head>
 
@@ -67,14 +68,14 @@
            }).call(yAxis)
        }
         
-        function rescale(){
+        function rescale(){ 
               let max = Math.round(Math.random()*100)
-              xAxis.scale().domain([0,max])
-              svg.select("g.x-axis").transition().call(xAxis)
+            //   xAxis.scale().domain([0,max])
+            //   svg.select("g.x-axis").transition().call(xAxis)
               yAxis.scale().domain([max,0])
               svg.select("g.y-axis").transition().call(yAxis)
-              renderXGridLine()
-              renderYGridLine()
+            //   renderXGridLine()
+            //   renderYGridLine()
         }
 
         function renderXGridLine(){
@@ -84,7 +85,7 @@
             .attr("y1",0)
             .attr("x2",0)
             .attr("y2",-(height-margin*2))
-       
+        
         }
 
         function renderYGridLine(){

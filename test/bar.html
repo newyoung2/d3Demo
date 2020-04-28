@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0,minimal-ui:ios">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="../d3.js"></script>
+    <style>
+    .container{
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* .axis{
+        border:1px solid black;
+    } */
+
+    .svg_style{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 80vh;
+        -moz-box-shadow:0px 0px 20px #333333;
+        -webkit-box-shadow:0px 0px 20px #333333;
+        box-shadow:0px 0px 20px #333333;
+    }
+
+     .grid-line{
+          stroke: black;
+         shape-rendering: crispEdges;
+         stroke-opacity: .2;
+        }
+    
+    .area0 {
+     stroke: none;
+     fill: steelblue;
+     fill-opacity: .2;
+    }
+
+    .area1 {
+     stroke: none;
+     fill: green;
+     fill-opacity: .2;
+    }
+
+    .area2 {
+     stroke: none;
+     fill: red;
+     fill-opacity: .2;
+    }
+
+    .dot0 {
+     fill: #fff;
+     stroke: steelblue;
+    }
+
+    .zoom {
+     stroke: none;
+     fill: red;
+     transform: scale(1.5);
+    }
+
+    .dot1 {
+     fill: #fff;
+     stroke: green;
+    }
+
+    
+
+    .dot2 {
+     fill: #fff;
+     stroke: red;
+    }
+
+    
+
+    .line0{
+      fill: none;    
+      stroke: steelblue;
+      stroke-width: 2;
+    }
+
+    .line1{
+      fill: none;    
+      stroke: green;
+      stroke-width: 2;
+    }
+
+    .line2{
+      fill: none;    
+      stroke: red;
+      stroke-width: 2;
+    }
+
+    .yTextStyle{
+        color: red;
+        font-size: 13px;
+    }
+
+    .toolTip{
+        position: absolute;
+        width: 130px;
+        height: 77px;
+        background-color: rgba(0,0,0,0.5);
+        border-radius: 15px;
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .toolTipText{
+        font-size: 12px;
+        letter-spacing: 1px;
+         margin: 2px 0;
+    }
+
+    .rect0{
+        fill:rgba(238,99,99,1);
+        stroke: white;
+        stroke-width: 0;
+        cursor: pointer;
+    }
+
+    .rect0Active{
+        fill:rgba(238,99,99,0.7);
+        stroke: white;
+        stroke-width: 0;
+        cursor: pointer;
+    }
+
+    .rect1{
+        fill:rgba(255,193,37,1);
+        stroke: white;
+        stroke-width: 0;
+        cursor: pointer;
+    }
+
+    .rect1Active{
+        fill:rgba(255,193,37,0.7);
+        stroke: white;
+        stroke-width: 0;
+        cursor: pointer;
+    }
+
+    .rect2{
+        fill:rgba(139,101,8,1);
+        stroke: white;
+        stroke-width: 0;
+        cursor: pointer;
+    }
+
+    .rect2Active{
+        fill:rgba(139,101,8,0.7);
+        stroke: white;
+        stroke-width: 0;
+        cursor: pointer;
+    }
+
+    .rectShaow{
+        fill:rgba(0,0,0,0);
+        stroke: white;
+        stroke-width: 0;
+    }
+
+    .rectShaowActive{
+        fill:rgba(0,0,0,0.1);
+        stroke: white;
+        stroke-width: 0;
+    }
+    </style>
+</head>
+
+<body>
+    <!-- 折线图 -->
+    <div class="container" id="root">
+          
+    </div>
+    
+    <script>
+        let svg = null   //SVG对象
+        let height = 500   //SVG高度
+        let width = 1000    //SVG宽度
+        let offset = 60    //坐标系距离svg边缘的距离
+        let axisWidth = width - 2 * offset   //坐标系的宽度
+        let axisHeight = height - 2 * offset   //坐标系的高度
+        let axisData = []    //坐标轴数据
+        let maxAxisData = null  //
+        svg = d3.select("#root").append('svg').attr("class","svg_style").style('width',width+"px").style('height',height+'px')
+        const renderSvg = ()=>{
+            renderAxisX()
+            renderAxisY()
+            renderShadowRects()
+            renderRects(axisData)
+            
+        }
+
+        const renderAxisX = ()=>{   //定义x轴
+             xScale = d3.scaleLinear().domain([1,13]).range([0,axisWidth]) //定义尺度
+            let axis = d3.axisBottom().scale(xScale).ticks(13).tickSize(12).tickPadding(10)  //定义坐标轴
+                svg.append("g").attr('class','xAxis')
+                .attr('transform',`translate(${offset},${height-offset})`) 
+                .call(axis)
+                .selectAll('text').attr('dx',25).text(function(v,i){
+                    console.log(i,axisData[0].length-1)
+                    if(i != (axisData[0].length-1)){
+                        return v
+                    }else{
+                        return ' '
+                    }
+                })
+                
+            svg.append('text')
+               .append('tspan')   //文字颜色
+               .attr('fill','#666666')   
+               .text('(月份)')
+               .attr("x",width-30)
+               .attr('y',height - 50)
+               .attr('text-anchor',"middle")
+               .attr('class',"yTextStyle")
+        }
+
+        const renderAxisY = ()=>{  //定义y轴
+             d3.selectAll("g.yAxis").remove()
+             yScale = d3.scaleLinear().domain([maxAxisData,0]).range([0,axisHeight]) //定义尺度
+             yAxis = d3.axisLeft().scale(yScale)    //定义坐标轴
+            svg.append("g").attr('class','yAxis')
+               .attr('transform',`translate(${offset},${offset})`) 
+               .call(yAxis)
+            svg.append('text').append('tspan')
+               .attr('fill','#666666').text('产量（吨）')
+               .attr("x",offset).attr('y',50)
+               .attr('text-anchor',"middle")
+               .attr('class',"yTextStyle")
+        }
+        
+        const renderXGridLine = ()=>{    //x轴分割线
+            d3.selectAll("g.xAxis g.tick").select("line.grid-line").remove()
+            d3.selectAll("g.xAxis g.tick").append("line").classed("grid-line",true)
+            .attr("x1",0)
+            .attr("y1",0)
+            .attr("x2",0)
+            .attr("y2",-axisHeight)
+        
+        }
+
+        const renderYGridLine = ()=>{   //y轴分割线
+            d3.selectAll("g.yAxis g.tick").select("line.grid-line").remove()
+            d3.selectAll("g.yAxis g.tick").append("line").classed("grid-line",true)
+            .attr("x1",0)
+            .attr("y1",0)
+            .attr("x2",axisWidth)
+            .attr("y2",0)
+       
+        }
+        
+        
+
+        const renderRects = (val) => {        //定义点
+        
+                val.forEach((data, index) => {
+                    d3.selectAll(`rect.rect${index}`).remove()
+                    svg.append("g").selectAll("rect")
+                        .data(data)
+                        .enter().append("rect")
+                        .attr("class", `rect${index}`)
+                        .attr("x", function (d) { return xScale(d.x) + offset+15*index+ ((axisWidth/12)-3*15)/2; })
+                        .attr("y", function (d) { return yScale(d.y) + offset; })
+                        .attr("width", 13+'px')
+                        .attr('height',function (d,i) { 
+                            console.log(d)
+                            return height - yScale(d.y)-2*offset})
+                        .on('mouseover',function(d,i) {
+                            //鼠标移入原点事件
+                              const e = event || window.event;
+                              d3.select(this).attr("class", `rect${index}Active`)  //放大圆点
+                              const obj = {
+                                  type:'show',
+                                  x:e.clientX,
+                                  y:e.clientY,
+                                  data:d
+                              }
+                              showToopTop(obj)  //显示提示框
+                              showShadowBox(i)
+                            //   toolTipLine('show',d.x)
+                        })
+                        .on('mouseout',function(d,i){
+                            const e = event || window.event;
+                            d3.select(this).attr("class", `rect${index}`)  //放大圆点
+                            showToopTop({type:false})  //隐藏提示框
+                            hideShadowBox(i)
+                            // toolTipLine('hide',d.x)
+                        })
+                })
+
+            }
+        
+        
+        
+
+        const showToopTop = (obj)=>{  //添加提示框
+            if(obj.type == 'show'){
+                d3.select("#root").append('div')
+                  .attr("class",'toolTip')
+                  .style('left',obj.x+20+'px')
+                  .style('top',obj.y+20+'px')
+                  .append('div').attr('class','toolTipText').text(obj.data.type)
+                  .append('div').attr('class','toolTipText').text(`${obj.data.x}月产量：${obj.data.y}吨`)
+            }else{
+                d3.select('div.toolTip').remove()
+            }
+
+           
+        }
+
+
+        const toolTipLine = (type, xIndex) => {    //提示线
+                if (type == 'show') {
+                    d3.selectAll("g.xAxis g.tick").filter(`:nth-child(${xIndex + 1})`).select("line.grid-line").remove()
+                    d3.selectAll(`g.xAxis g.tick`).filter(`:nth-child(${xIndex + 1})`).append("line").classed("grid-line", true)
+                        .attr("x1", 0)
+                        .attr("y1", 0)
+                        .attr("x2", 0)
+                        .attr("y2", -axisHeight)
+                } else {
+                    d3.selectAll("g.xAxis g.tick").filter(`:nth-child(${xIndex + 1})`).select("line.grid-line").remove()
+                }
+            }
+        
+            const renderShadowRects = () => {   //定义阴影提示框
+                
+                    d3.selectAll(`rect.rectShaow`).remove()
+                    svg.append("g").selectAll("rect")
+                        .data(axisData[0])
+                        .enter().append("rect")
+                        .attr("class", `rectShaow`)
+                        .attr("x", function (d) { return xScale(d.x) + offset })
+                        .attr("y", function (d) { return  offset; })
+                        .attr("width", axisWidth/12+'px')
+                        .attr('height',function (d,i) { 
+                            if(i != (axisData[0].length-1)){
+                                 return height-2*offset
+                            }else{
+                                 return 0
+                            }
+                        })
+                        .on('mouseover',function(d,i) {
+                            //鼠标移入原点事件
+                            //   d3.select(this).attr("class", `rectShaowActive`)  //放大圆点
+                              showShadowBox(i)
+                        })
+                        .on('mouseout',function(d,i){
+                            // d3.select(this).attr("class", `rectShaow`)  //放大圆点
+                            // toolTipLine('hide',d.x)
+                            hideShadowBox(i)
+                        })
+                
+
+            }
+
+        const showShadowBox = (i)=>{
+               d3.selectAll('rect.rectShaow').filter(`:nth-child(${i+1})`).attr("class", `rectShaowActive`)
+        }    
+
+        const hideShadowBox = (i)=>{
+            d3.selectAll('rect.rectShaowActive').filter(`:nth-child(${i+1})`).attr("class", `rectShaow`)
+       } 
+
+        const initData = () => {   //初始化数据
+                axisData = []
+                let  maxVal = []
+                for (let i = 0; i <= 2; i++) {
+                    let dataMax = null
+                    if(i==0){
+                         dataMax = abs()
+                    }
+                    if(i==1){
+                         dataMax = abs1()
+                    }
+                    if(i==2){
+                         dataMax = abs2()
+                    }
+                    dataMax.push(0)
+                    console.log(dataMax)
+                    maxVal = maxVal.concat(dataMax)
+                    let data = d3.range(13).map(function (i2) { // <-B
+                        return { x: i2 + 1, y: dataMax[i2],type:'工厂'+(i+1) };
+                    });
+                    axisData.push(data)
+                    console.log(axisData)
+                }
+                maxAxisData =   maxVal.sort(d3.ascending)[maxVal.length-1] 
+            }
+
+
+        const abs = ()=>{    //生成0-20之间不重复的随机整数
+			var arr = new Array();
+			for(var i = 0; i < 12; i++) {
+                var n = parseInt(Math.random()*20+0);//随机生成整形数
+				if(arr.length == 0) {
+					arr.push(n);    //从末尾插入数组
+				} else {
+                        //indexOf判断数组中是否有元素n,如果没有输出-1，如果有输出位置
+					if(arr.indexOf(n) < 0) {
+						arr.push(n);
+					} else {
+						i--;
+					}
+ 
+				}
+			}
+               return arr
+            }
+        
+            const abs1 = ()=>{    //生成0-20之间不重复的随机整数
+			var arr = new Array();
+			for(var i = 0; i < 12; i++) {
+                 var n = parseInt(Math.random()*50+30);//随机生成整形数
+				if(arr.length == 0) {
+					arr.push(n);    //从末尾插入数组
+				} else {
+                        //indexOf判断数组中是否有元素n,如果没有输出-1，如果有输出位置
+					if(arr.indexOf(n) < 0) {
+						arr.push(n);
+					} else {
+						i--;
+					}
+ 
+				}
+			}
+               return arr
+            }
+
+            const abs2 = ()=>{    //生成0-20之间不重复的随机整数
+			var arr = new Array();
+			for(var i = 0; i < 12; i++) {
+                 var n = parseInt(Math.random()*80+60);//随机生成整形数
+				if(arr.length == 0) {
+					arr.push(n);    //从末尾插入数组
+				} else {
+                        //indexOf判断数组中是否有元素n,如果没有输出-1，如果有输出位置
+					if(arr.indexOf(n) < 0) {
+						arr.push(n);
+					} else {
+						i--;
+					}
+ 
+				}
+			}
+               return arr
+            }
+        initData()
+        renderSvg()
+        
+
+         setInterval(() => {
+              initData()
+              renderSvg()
+        }, 3000); 
+    </script>
+</body>
+
+
+
+
+</html>
+
