@@ -77,15 +77,32 @@
     </div>
     
     <script>
-        let width = "500";
-        let hight = "500";
+        let width = "500";   //svg宽度
+        let hight = "500";   //svg高度
         let value = 51  //水的高度
+        let max = 100  //波浪流动速度   值越小速度越快
+        let waveColor = '#4876FF'  //海浪颜色
+        let textColor = '#4876FF'  //文本颜色
+        let outCircleColor = '#4876FF'  //外环颜色
+        let  areaData = makeData(value)
+        let waveShape = null
+        let area =null
+        let defs =null
+        let waveText = null
         let svg = d3.select("#root").append("svg")              //创建svg
                 .attr("width", width+'px')  //长
                 .attr("height", hight+'px') //高
                 .attr('class','svg_style')  
-        let max = 100
-        let area = d3.area()
+        
+
+        const init = () =>{
+            renderArea()
+            renderPie()
+            renderText()
+        }
+        //定义一个区域
+        const renderArea = () =>{
+             area = d3.area()
                   .x(function(d,i){ 
                       if(i != (areaData.length-1) ){
                         return i*(width/max)
@@ -97,42 +114,47 @@
                   .y0(460)
                   .y1(function(d,i){return  500 - d})
                   .curve(d3.curveBasis)
-        let  areaData = makeData(value)
-        let defs = svg.append('defs')
+        
+        
+         defs = svg.append('defs')
                 .append("clipPath").attr('id','clip')
                 .append("circle").attr('cx','250').attr('cy','250').attr('r','210') 
 
-        let waveShape = svg.append("path")
+         waveShape = svg.append("path")
            .attr("id","wave")
            .attr("class",'pathArea')
-           .attr("fill","#4876FF")
+           .attr("fill",waveColor)
            .attr("d",area(areaData))
-           .attr("style","clip-path: url(#clip);")   //用圆形 裁剪波浪动画 
+           .attr("style","clip-path: url(#clip);")   //用圆形 裁剪波浪动画
+        }
+         
         
-        //定义一个外环  
+         //定义一个外环
+        const renderPie = ()=>{ 
         let arc = d3.arc().outerRadius(230).innerRadius(220);
         let pie = d3.pie();    
-        let pieData = pie([1])
-        
+        let pieData = pie([1]) 
         svg.append("path").data(pieData)
                 .attr("transform","translate(250,250)")
                 .attr("d", d => arc(d))
-                .attr("fill", '#4876FF')
-
-
-        //定义标签文本
-        let waveText =  svg.append("text").append('tspan')
+                .attr("fill", outCircleColor)
+        }
+        
+         //定义标签文本
+        const renderText = ()=>{
+         waveText =  svg.append("text").append('tspan')
              .attr("x","150")
              .attr("y","280")
              .attr("class","textStyle")
             //  .attr("stroke","#FFFFFF")
             //  .attr("strokeWidth",1)
-             .attr("fill",'#4876FF')
+             .attr("fill",textColor)
              .text(value+'%')
+        }
+        
 
-
+           //生成余弦曲线y轴数据
            function makeData(val){
-            //生成余弦曲线y轴数据
             let arr0 = []
             for (let i = 0; i < max; i++) {
                 let r = i / max * 2;
@@ -147,23 +169,27 @@
             return area_data
         }
         
-
+        //随机生成m-n之间的随机数
         function sum(m, n) {
                 let num = Math.floor(Math.random() * (m - n) + n);
                 return num
             }
-
+        
+        //每一次渲染将波浪数组第一个截取添加到最后一个实现波浪动画
         function getNextData(data) {
                 var r = data.slice(1);
                 r.push(data[0]);
                 return r;
             }
-      
-            function renderWave() {
+        
+        //渲染波浪动画
+        function renderWave() {
                 areaData = getNextData(areaData);
                 waveShape.attr("d", area(areaData))
                 requestAnimationFrame(renderWave);
             }
+
+            init()
             requestAnimationFrame(renderWave);
 
             setInterval(() => {
