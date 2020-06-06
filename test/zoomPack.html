@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0,minimal-ui:ios">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <script src="../d3.js"></script>
+  <style>
+    .container {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* .axis{
+        border:1px solid black;
+    } */
+    .c1 {
+      fill: red;
+      stroke: white;
+      stroke-width: 1px;
+    }
+
+    .c2 {
+      fill: green;
+      stroke: white;
+      stroke-width: 1px;
+    }
+  </style>
+</head>
+
+<body>
+  <svg width="600" height="600">
+    <g class="cc"></g>
+  </svg>
+
+  <script>
+    var data = {
+      "name": "A1",
+      'isNode': false,
+      "children": [
+        {
+          "name": "B1",
+          'isNode': false,
+          "children": [
+            {
+              "name": "C1",
+              'isNode': true,
+              "value": 100
+            },
+            {
+              "name": "C2",
+              'isNode': true,
+              "value": 300
+            },
+            {
+              "name": "C3",
+              'isNode': true,
+              "value": 200
+            }
+          ]
+        },
+        {
+          "name": "B2",
+          "value": 200
+        }
+      ]
+    };
+
+    let colorScale = d3.scaleOrdinal().domain([0, 300]).range(['#28004d', '#3a006f', '#4b0091', '#5b00ae', '#6f00d2', '#8600ff', '#921aff', '#9f35ff', '#b15bff'])
+    var packLayout = d3.pack()
+      .size([300, 300])
+      .padding(10)
+
+    var rootNode = d3.hierarchy(data)
+
+    rootNode.sum(function (d) {
+      return d.value;
+    });
+
+    packLayout(rootNode);
+    renderPack()
+
+//打包图
+function  renderPack(){
+
+    d3.select('svg g').selectAll('g').remove()
+
+    
+
+    // 点击空白区域  reset
+    d3.select('svg') .on('click',function(){
+        renderPack()
+      })
+
+
+    // 
+    let arr = []
+    var nodes = d3.select('svg g.cc')
+      .selectAll('g')
+      .data(rootNode.descendants())
+      .enter()
+      .append('g')
+      .attr("class", 'c1')
+      .attr('transform', function (d) {
+        arr.push(d)
+        return 'translate(' + [d.x, d.y] + ')'
+      })
+      .on("click", function (d, i, c) {
+        d3.event.stopPropagation();
+        let x = 300 - arr[i].x
+        let y = 300 - arr[i].y
+        let r = 300/d.r
+        arr.forEach((element, i1) => {
+          let xb = (element.x - d.x)*r+300
+          let yb = (element.y - d.y)*r+300
+          d3.select('svg g').selectAll('g').filter(`:nth-child(${i1 + 1})`)
+                            .transition().duration(400)
+                            .attr('transform', `translate(${xb},${yb}) scale(${r})`)
+            
+        });
+
+
+      });
+
+    nodes
+      .append('circle')
+      .attr("fill", (d, i) => colorScale(d.value))
+      .attr('r', function (d) { return d.r; })
+
+    nodes
+      .append('text')
+      .attr('dy', 4)
+      .text(function (d) {
+        return d.children === undefined ? d.data.name : '';
+      })
+
+
+    }
+
+    
+
+
+  </script>
+</body>
+
+</html>
