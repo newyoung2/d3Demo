@@ -112,9 +112,7 @@ function  renderPack(){
         return 'translate(' + [d.x, d.y] + ')'
       })
       .on("click", function (d, i, c) {
-        d3.event.stopPropagation();
-        let x = 300 - arr[i].x
-        let y = 300 - arr[i].y
+        d3.event.stopPropagation();  //d3阻止冒泡事件
         let r = 300/d.r
         arr.forEach((element, i1) => {
           let xb = (element.x - d.x)*r+300
